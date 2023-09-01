@@ -1,0 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+#ponderacion-item:has(input:checked){
+    @apply bg-blue-200 transition-all;
+}
