@@ -71,7 +71,7 @@ const EditarConcurso = () => {
       await obtenerConcurso();
       setJsonFormVisible(false);
       alert("Importado !");
-
+      resetJSON()
     } catch (error) {
       console.log(error)
       alert("Error en el formato del json !")
@@ -98,11 +98,13 @@ const EditarConcurso = () => {
       }
     )
     await navigator.clipboard.writeText(JSON.stringify(datos));
+    await obtenerConcurso();
+
     alert("Criterios Copiados al portapapel")
   }
 
   const { handleSubmit, register } = useForm();
-  const { handleSubmit: handlerSubmitJSON, register: registerJSON } = useForm();
+  const { handleSubmit: handlerSubmitJSON, register: registerJSON, reset: resetJSON } = useForm();
 
   if (!concurso.id) return <p>Cargando...</p>
 
@@ -128,7 +130,7 @@ const EditarConcurso = () => {
           />
           <DateTimeInput
             label="Fecha"
-            min={new Date().toISOString().split("T")[0] + "T00:00"}
+            min={new Date("2023-09-07").toLocaleDateString("sv", { hour: 'numeric', minute: 'numeric' })}
             defaultValue={new Date(concurso.fecha).toLocaleDateString("sv", { hour: 'numeric', minute: 'numeric' })}
             register={register("fecha", { required: true, valueAsDate: true })}
           />
@@ -187,7 +189,7 @@ const EditarConcurso = () => {
               onClick={exportJSONClick}
               className="bg-green-500 text-white py-2 px-4 rounded-lg"
             >
-              Exportar JSON
+              Exportar Rubrica
             </button>
             : <button
               onClick={() => {
@@ -197,7 +199,7 @@ const EditarConcurso = () => {
               }}
               className="bg-red-500 text-white py-2 px-4 rounded-lg"
             >
-              {jsonFormVisible ? 'Cerrar' : 'Importar JSON'}
+              {jsonFormVisible ? 'Cerrar' : 'Importar Rubrica'}
             </button>}
 
 
@@ -223,7 +225,7 @@ const EditarConcurso = () => {
             <form className="flex flex-col" onSubmit={handlerSubmitJSON(importJSONSubmit)}>
               <textarea
                 {...registerJSON("json")}
-                placeholder="Introduce el JSON aquí"
+                placeholder="Pega la rubrica aquí"
                 rows={4}
                 className="border rounded-lg p-2"
               />
@@ -231,7 +233,7 @@ const EditarConcurso = () => {
                 type="submit"
                 className="bg-green-500 text-white py-2 px-4 rounded-lg mt-2"
               >
-                Importar JSON
+                Importar Rubrica
               </button>
             </form>
           ) : ''
@@ -341,13 +343,14 @@ const TextareaInput = ({ label, placeholder, register }) => (
   </div>
 );
 
-const DateTimeInput = ({ label, min, defaultValue, register }) => (
+const DateTimeInput = ({ label, min, defaultValue, register, max = new Date("2023-09-11").toLocaleDateString("sv", { hour: 'numeric', minute: 'numeric' })}) => (
   <div>
     <label className="block text-gray-600 font-semibold mb-1">{label}</label>
     <input
       {...register}
       type="datetime-local"
       min={min}
+      max={max}
       defaultValue={defaultValue}
       className="w-full p-3 rounded-md border border-gray-300 focus:outline-none focus:border-blue-500"
     />

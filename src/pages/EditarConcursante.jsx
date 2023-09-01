@@ -8,7 +8,7 @@ const EditarConcursante = () => {
     const [concursos, setConcursos] = useState([]);
     const [concursante, setConcursante] = useState({});
     const { id } = useParams();
-    const {usuario} = useSession();
+    const { usuario } = useSession();
 
     const navigate = useNavigate();
     const { register, handleSubmit } = useForm();
@@ -36,7 +36,7 @@ const EditarConcursante = () => {
     const obtenerConcursosPage = async () => {
         try {
             const data = await obtenerConcursosDisponibles(id);
-            setConcursos(data);
+            setConcursos(data.filter(concurso => concurso.estado=="inscripcion"));
         } catch (error) {
             console.log(error);
         }
@@ -55,6 +55,8 @@ const EditarConcursante = () => {
         try {
             await unirloAConcurso(id, id_concurso);
             await obtenerConcursante();
+            await obtenerConcursosPage();
+
         } catch (error) {
             console.log(error);
         }
@@ -64,6 +66,8 @@ const EditarConcursante = () => {
         try {
             await removerDeConcurso(id, id_concurso);
             await obtenerConcursante();
+            await obtenerConcursosPage();
+
         } catch (error) {
             console.log(error);
         }
@@ -72,7 +76,7 @@ const EditarConcursante = () => {
     useEffect(() => {
         obtenerConcursante();
         obtenerConcursosPage();
-    }, [concursante]);
+    }, []);
 
     if (!concursante.id) return <p>Cargando...</p>;
 
@@ -163,12 +167,16 @@ const EditarConcursante = () => {
                         {concursante.concursos.map(({ concurso }) => (
                             <div key={concurso.id} className="flex items-center justify-between">
                                 <p>{concurso.nombre}</p>
-                                <button
-                                    onClick={() => sacarDelConcursoClick(concurso.id)}
-                                    className="bg-red-500 text-white py-1 px-3 rounded-lg hover:bg-red-600 focus:outline-none"
-                                >
-                                    Sacar del concurso
-                                </button>
+                               {
+                                concurso.estado=="inscripcion"
+                                ?  <button
+                                onClick={() => sacarDelConcursoClick(concurso.id)}
+                                className="bg-red-500 text-white py-1 px-3 rounded-lg hover:bg-red-600 focus:outline-none"
+                            >
+                                Sacar del concurso
+                            </button>
+                            : ''
+                               }
                             </div>
                         ))}
                     </div>

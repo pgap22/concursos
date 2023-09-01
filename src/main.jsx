@@ -130,6 +130,10 @@ const router = createBrowserRouter([
         element: <AgregarConcursante />
       },
       {
+        path: "concurso/agregar-jurado/:id",
+        element: <AgregarJurado />
+      },
+      {
         path: "concurso/:id",
         element: <EditarConconcurso />
       },

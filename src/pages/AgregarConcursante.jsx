@@ -3,6 +3,7 @@ import { Link, useLocation, useParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form';
 import { obtenerConcursantes, removerDeConcurso, unirloAConcurso } from '../api/concursantes';
 import { obtenerConcursantesConcursoDisponible, obtenerConcursoConcursantes, obtenerConcursoPorId } from '../api';
+import { useSession } from '../hooks/useSession';
 
 const AgregarConcursante = () => {
   const { concurso: dataConcurso } = useLocation().state;
@@ -11,6 +12,7 @@ const AgregarConcursante = () => {
   const [concursantesConcurso, setConcursantesConcurso] = useState([])
   const [concursantes, setConcursantes] = useState([])
   const [loading, setLoading] = useState(true)
+  const {usuario} = useSession();
 
   const { register, handleSubmit, reset } = useForm()
 
@@ -80,7 +82,7 @@ const AgregarConcursante = () => {
     <main className="px-4 py-8 bg-gray-100 min-h-screen">
       <div className="max-w-screen-lg mx-auto bg-white rounded-lg overflow-hidden shadow-md">
         <div className="p-6 md:p-8">
-          <Link to={"/admin/concurso/" + id} className="block mb-4">
+          <Link to={`/${usuario.rol}/concurso/` + id} className="block mb-4">
             <button className="bg-blue-500 text-white py-2 px-4 rounded-lg">
               Regresar
             </button>

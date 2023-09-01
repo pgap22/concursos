@@ -22,6 +22,7 @@ const CrearJurado = () => {
       await crearJurado(data, rol);
       navigate('/admin');
     } catch (error) {
+      alert("Puede ser que el usuario esté repetido o un error en el servidor")
       console.log(error);
     }
   };

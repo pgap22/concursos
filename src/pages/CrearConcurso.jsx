@@ -79,7 +79,8 @@ const CrearConcurso = () => {
               {...register("fecha", { required: true })}
               type="datetime-local"
               id="fecha"
-              min={new Date().toISOString().split("T")[0] + "T00:00"}
+              min={new Date("2023-09-07").toLocaleDateString("sv", { hour: 'numeric', minute: 'numeric' })}
+              max={new Date("2023-09-11").toLocaleDateString("sv", { hour: 'numeric', minute: 'numeric' })}
               className={`w-full p-3 rounded-md border ${errors.fecha ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:border-blue-500`}
             />
             {errors.fecha && <p className="text-red-500">La fecha es requerida</p>}

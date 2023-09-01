@@ -53,7 +53,7 @@ function Login() {
             <input
               {...register("usuario", { required: true })}
               className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Correo electrónico"
+              placeholder="Usuario"
             />
           </div>
           <div className="relative">
