@@ -2,16 +2,23 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { actualizarConcurso, cambiarEstado, eliminarConcurso, importarRubricaJSON, obtenerConcursoPorId } from "../api";
 import { useForm } from "react-hook-form";
-import { crearCriterio, eliminarCriterio } from "../api/criterios";
+import { actualizarCriterio, crearCriterio, duplicarCriterio, eliminarCriterio } from "../api/criterios";
 import { actualizarPonderacion, crearPonderacion, eliminarPonderacion } from "../api/ponderacion";
 import { useClickAway } from "@uidotdev/usehooks";
 import { useSession } from "../hooks/useSession";
+import Skeleton from "../components/Skeleton";
+import Loader from "../components/Loader";
 
 const EditarConcurso = () => {
   const [concurso, setConcurso] = useState({});
   const [agregarCriterioActivo, setAgregarCriterioActivo] = useState(false);
   const [jsonFormVisible, setJsonFormVisible] = useState(false);
-  const {usuario} = useSession();
+
+  const [loadingClick, setLoadingClick] = useState(false);
+  const [loadingImport, setLoadingImport] = useState(false);
+
+
+  const { usuario } = useSession();
 
   const navigate = useNavigate();
   const { id } = useParams();
@@ -22,6 +29,7 @@ const EditarConcurso = () => {
 
   const cambiarEstadoClick = async () => {
     try {
+      setLoadingClick(true);
       let estado = 'inscripcion';
 
       if (concurso.estado == "inscripcion") {
@@ -35,6 +43,9 @@ const EditarConcurso = () => {
       await obtenerConcurso();
     } catch (error) {
       console.log(error)
+    }
+    finally {
+      setLoadingClick(false);
     }
   }
 
@@ -58,15 +69,21 @@ const EditarConcurso = () => {
 
   const eliminarConcursoClick = async () => {
     try {
+      setLoadingClick(true);
+
       await eliminarConcurso(id);
       navigate(`/${usuario.rol}`);
     } catch (error) {
       console.log(error);
     }
+    finally {
+      setLoadingClick(false);
+    }
   };
 
-  const importJSONSubmit = async ({json}) => {
+  const importJSONSubmit = async ({ json }) => {
     try {
+      setLoadingImport(true);
       await importarRubricaJSON(id, JSON.parse(json));
       await obtenerConcurso();
       setJsonFormVisible(false);
@@ -76,21 +93,25 @@ const EditarConcurso = () => {
       console.log(error)
       alert("Error en el formato del json !")
     }
+    finally{
+      setLoadingImport(false);
+    }
   }
 
-  const exportJSONClick = async ()=>{
+  const exportJSONClick = async () => {
     let datos = [...concurso.criterios]
     datos.map(
       criterio => {
         delete criterio.id_concurso
         delete criterio.id
-        
+        delete criterio.createdAt
+
         let ponderaciones = [...criterio.ponderaciones]
         criterio.ponderaciones = ponderaciones.map(
           ponderacion => {
-           delete ponderacion.id
-           delete ponderacion.id_criterio
-           return ponderacion
+            delete ponderacion.id
+            delete ponderacion.id_criterio
+            return ponderacion
           }
         )
 
@@ -103,7 +124,7 @@ const EditarConcurso = () => {
     alert("Criterios Copiados al portapapel")
   }
 
-  const { handleSubmit, register } = useForm();
+  const { handleSubmit, register, formState: { isSubmitting } } = useForm();
   const { handleSubmit: handlerSubmitJSON, register: registerJSON, reset: resetJSON } = useForm();
 
   if (!concurso.id) return <p>Cargando...</p>
@@ -134,7 +155,15 @@ const EditarConcurso = () => {
             defaultValue={new Date(concurso.fecha).toLocaleDateString("sv", { hour: 'numeric', minute: 'numeric' })}
             register={register("fecha", { required: true, valueAsDate: true })}
           />
-          <SubmitButton isLoading={false} label="Enviar" />
+          <button
+            disabled={isSubmitting}
+            type="submit"
+            className="w-full bg-blue-500 flex justify-center items-center text-white py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none"
+          >
+            <Skeleton loading={isSubmitting} fallback={<Loader />}>
+              Editar
+            </Skeleton>
+          </button>
         </form>
         <div className="flex-col md:flex-row flex gap-4">
           {
@@ -161,24 +190,30 @@ const EditarConcurso = () => {
             concurso.estado != "finalizado"
               ?
               <button
+                disabled={loadingClick}
                 onClick={cambiarEstadoClick}
                 className="bg-slate-500 text-white py-2 px-4 rounded-lg"
               >
-                {
-                  concurso.estado == 'inscripcion'
-                    ? 'Pasar a evaluacion'
-                    : concurso.estado == "evaluacion"
-                      ? 'Finalizar concurso'
-                      : ''
-                }
+                <Skeleton loading={loadingClick}>
+                  {
+                    concurso.estado == 'inscripcion'
+                      ? 'Pasar a evaluacion'
+                      : concurso.estado == "evaluacion"
+                        ? 'Finalizar concurso'
+                        : ''
+                  }
+                </Skeleton>
               </button>
               : ''
           }
           <button
+            disabled={loadingClick}
             onClick={eliminarConcursoClick}
             className="bg-red-500 text-white py-2 px-4 rounded-lg"
           >
-            Eliminar Concurso
+            <Skeleton loading={loadingClick}>
+              Eliminar Concurso
+            </Skeleton>
           </button>
         </div>
         <h2 className="text-xl font-semibold text-gray-800">Criterios</h2>
@@ -230,10 +265,13 @@ const EditarConcurso = () => {
                 className="border rounded-lg p-2"
               />
               <button
+                disabled={loadingImport}
                 type="submit"
                 className="bg-green-500 text-white py-2 px-4 rounded-lg mt-2"
               >
-                Importar Rubrica
+                <Skeleton loading={loadingImport} fallback={<Loader />}>
+                  Importar Rubrica
+                </Skeleton>
               </button>
             </form>
           ) : ''
@@ -244,7 +282,7 @@ const EditarConcurso = () => {
 };
 
 const AgregarCriterioForm = ({ idConcurso, obtenerConcurso }) => {
-  const { handleSubmit, register, reset } = useForm();
+  const { handleSubmit, register, reset, formState: { isSubmitting } } = useForm();
 
   const agregarCriterioSubmit = async (data) => {
     try {
@@ -265,7 +303,15 @@ const AgregarCriterioForm = ({ idConcurso, obtenerConcurso }) => {
     <form onSubmit={handleSubmit(agregarCriterioSubmit)} className="space-y-6">
       <TextInput label="Nombre Criterio" placeholder="nombre Criterio" register={register("nombre", { required: true })} />
       <TextInput label="Descripción Criterio" placeholder="descripcion Criterio" register={register("descripcion", { required: true })} />
-      <SubmitButton isLoading={false} label="CREAR" />
+      <button
+        disabled={isSubmitting}
+        type="submit"
+        className="w-full bg-blue-500 flex justify-center items-center text-white py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none"
+      >
+        <Skeleton loading={isSubmitting} fallback={<Loader />}>
+          Crear
+        </Skeleton>
+      </button>
     </form>
   );
 };
@@ -273,28 +319,66 @@ const AgregarCriterioForm = ({ idConcurso, obtenerConcurso }) => {
 const Criterio = ({ criterio, obtenerConcurso }) => {
   const [mostarMas, setMostrarMas] = useState(false);
   const [formPonderacionActivo, setFormPonderacion] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const editar = () => {
+    setEditMode(!editMode);
+  };
 
   const eliminar = async () => {
     try {
+      setLoading(true)
       await eliminarCriterio(criterio.id);
       await obtenerConcurso();
     } catch (error) {
       console.log(error)
     }
+    finally {
+      setLoading(false)
+    }
+  }
+
+  const duplicar = async()=>{
+    try {
+      setLoading(true)
+      await duplicarCriterio(criterio.id)
+      await obtenerConcurso();
+    } catch (error) {
+      console.log(error)
+    }
+    finally{
+      setLoading(false)
+    }
   }
 
   return (
-    <div className="border rounded-lg p-4">
+    <div className={"border rounded-lg p-4 " + (loading ? 'opacity-30 select-none cursor-wait' : '')}>
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-gray-800">{criterio.nombre}</h3>
-        <div className="space-x-2">
-          <button onClick={() => setMostrarMas(!mostarMas)} className="text-blue-500 hover:underline">
-            {mostarMas ? "Ocultar" : "Mostrar"}
-          </button>
-          <button onClick={eliminar} className="text-red-500 hover:underline">
-            Eliminar
-          </button>
-        </div>
+        {editMode ? (
+          <EditCriterioForm
+            criterio={criterio}
+            obtenerConcurso={obtenerConcurso}
+            onCancel={() => setEditMode(false)}
+          />
+        ) : (
+          <div className="flex flex-col md:flex-row md:justify-between w-full text-center gap-2">
+            <h3 className="text-lg font-semibold text-gray-800">{criterio.nombre}</h3>
+            <div className="flex flex-col md:flex-row items-center gap-4 space-x-2">
+              <button disabled={loading} onClick={() => setMostrarMas(!mostarMas)} className="text-blue-500 hover:underline">
+                {mostarMas ? "Ocultar" : "Mostrar"}
+              </button>
+              <button disabled={loading} onClick={editar} className="text-green-500 hover:underline">
+                Editar
+              </button>
+              <button disabled={loading} onClick={duplicar} className="text-gray-500 hover:underline">
+                Duplicar
+              </button>
+              <button disabled={loading} onClick={eliminar} className="text-red-500 hover:underline">
+                Eliminar
+              </button>
+            </div>
+          </div>
+        )}
       </div>
       {mostarMas && (
         <div className="mt-4">
@@ -343,7 +427,7 @@ const TextareaInput = ({ label, placeholder, register }) => (
   </div>
 );
 
-const DateTimeInput = ({ label, min, defaultValue, register, max = new Date("2023-09-11").toLocaleDateString("sv", { hour: 'numeric', minute: 'numeric' })}) => (
+const DateTimeInput = ({ label, min, defaultValue, register, max = new Date("2023-09-11").toLocaleDateString("sv", { hour: 'numeric', minute: 'numeric' }) }) => (
   <div>
     <label className="block text-gray-600 font-semibold mb-1">{label}</label>
     <input
@@ -357,23 +441,13 @@ const DateTimeInput = ({ label, min, defaultValue, register, max = new Date("202
   </div>
 );
 
-const SubmitButton = ({ isLoading, label }) => (
-  <button
-    type="submit"
-    disabled={isLoading}
-    className={`w-full bg-blue-500 text-white py-2 px-4 rounded-lg ${isLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-600"
-      } focus:outline-none`}
-  >
-    {isLoading ? "Enviando..." : label}
-  </button>
-);
 const PuntosAEvaluarForm = ({
   criterioId,
   obtenerConcurso,
   formPonderacionActivo,
   setFormPonderacion,
 }) => {
-  const { handleSubmit, register, reset } = useForm();
+  const { handleSubmit, register, reset, formState: { isSubmitting } } = useForm();
 
   const agregarPonderacionSubmit = async (data) => {
     try {
@@ -401,9 +475,17 @@ const PuntosAEvaluarForm = ({
       {formPonderacionActivo && (
         <form onSubmit={handleSubmit(agregarPonderacionSubmit)} className="space-y-6">
           <TextInput label="Nivel" placeholder="Nivel" register={register("nombre", { required: true })} />
-          <TextInput label="Puntos" placeholder="puntos" register={register("valor", { required: true, valueAsNumber: true, value: 0, min: 1 })} />
+          <TextInput label="Puntos" placeholder="puntos" register={register("valor", { required: true, valueAsNumber: true, value: 0, min: 0 })} />
           <TextareaInput label="Descripción" placeholder="descripcion" register={register("descripcion", { required: true })} />
-          <SubmitButton isLoading={false} label="Agregar Ponderacion" />
+          <button
+            disabled={isSubmitting}
+            type="submit"
+            className="w-full bg-blue-500 flex justify-center items-center text-white py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none"
+          >
+            <Skeleton loading={isSubmitting} fallback={<Loader />}>
+              Agregar Ponderacion
+            </Skeleton>
+          </button>
         </form>
       )}
     </div>
@@ -412,7 +494,8 @@ const PuntosAEvaluarForm = ({
 
 const Ponderacion = ({ ponderacion, obtenerConcurso }) => {
   const [editarForm, setEditarForm] = useState(false);
-  const { register, handleSubmit, reset } = useForm();
+  const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm();
+  const [loading, setLoading] = useState();
   const outside = useClickAway(() => {
     setEditarForm(false);
     reset();
@@ -429,7 +512,7 @@ const Ponderacion = ({ ponderacion, obtenerConcurso }) => {
         id_criterio: ponderacion.id_criterio,
       });
       setEditarForm(false);
-      obtenerConcurso();
+      await obtenerConcurso();
     } catch (error) {
       console.log(error);
     }
@@ -437,10 +520,14 @@ const Ponderacion = ({ ponderacion, obtenerConcurso }) => {
 
   const eliminarPonderacionClick = async () => {
     try {
+      setLoading(true)
       await eliminarPonderacion(ponderacion.id);
-      obtenerConcurso();
+      await obtenerConcurso();
     } catch (error) {
       console.log(error);
+    }
+    finally{
+      setLoading(false)
     }
   };
 
@@ -450,9 +537,18 @@ const Ponderacion = ({ ponderacion, obtenerConcurso }) => {
       {editarForm ? (
         <form ref={outside} onSubmit={handleSubmit(editarPonderacionSubmit)} className="space-y-6">
           <TextInput label="Nivel" placeholder="Nivel" register={register("nombre", { value: ponderacion.nombre, required: true })} />
-          <TextInput label="Puntos" placeholder="puntos" register={register("valor", { valueAsNumber: true, value: ponderacion.valor ?? 0, min: 1,required: true })} />
-          <TextareaInput label="Descripción" placeholder="descripcion" register={register("descripcion", { value: ponderacion.descripcion,required: true })} />
-          <div className="space-x-2">
+          <TextInput label="Puntos" placeholder="puntos" register={register("valor", { valueAsNumber: true, value: ponderacion.valor ?? 0, min: 0, required: true })} />
+          <TextareaInput label="Descripción" placeholder="descripcion" register={register("descripcion", { value: ponderacion.descripcion, required: true })} />
+          <div className="flex flex-col gap-2">
+            <button
+              disabled={isSubmitting}
+              type="submit"
+              className="w-full bg-blue-500 flex justify-center items-center text-white py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none"
+            >
+              <Skeleton loading={isSubmitting} fallback={<Loader />}>
+                Editar
+              </Skeleton>
+            </button>
             <button
               onClick={() => setEditarForm(false)}
               className="bg-gray-300 text-gray-800 py-2 px-4 rounded-lg"
@@ -460,11 +556,10 @@ const Ponderacion = ({ ponderacion, obtenerConcurso }) => {
             >
               Cancelar
             </button>
-            <SubmitButton isLoading={false} label="Editar" />
           </div>
         </form>
       ) : (
-        <div>
+        <div className={loading ? 'opacity-30	 select-none' : ''}>
           <p className="text-lg font-semibold text-gray-800">{ponderacion.nombre}</p>
           <p className="text-gray-600">
             <b>Puntaje: </b>
@@ -491,4 +586,60 @@ const Ponderacion = ({ ponderacion, obtenerConcurso }) => {
   );
 };
 
+const EditCriterioForm = ({ criterio, onCancel, obtenerConcurso }) => {
+
+  const { register, handleSubmit, formState: { isSubmitting } } = useForm()
+  const onSubmit = async data => {
+    try {
+      await actualizarCriterio(criterio.id, data);
+      await obtenerConcurso();
+      onCancel();
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col w-full">
+      <div className="mb-4 flex flex-col w-full">
+        <label className="block text-gray-700 font-bold mb-2" htmlFor="nombre">
+          Nombre del Criterio:
+        </label>
+        <input
+          type="text"
+          id="nombre"
+          className="w-full p-3 rounded-md border border-gray-300 focus:outline-none focus:border-blue-500"
+          {...register("nombre", { required: true, value: criterio.nombre })}
+        />
+      </div>
+
+      <div className="mb-4">
+        <label className="block text-gray-700 font-bold mb-2" htmlFor="descripcion">
+          Descripción:
+        </label>
+        <textarea
+          id="descripcion"
+          className="w-full p-3 rounded-md border border-gray-300 focus:outline-none focus:border-blue-500"
+          {...register("descripcion", { required: true, value: criterio.descripcion })}
+        />
+      </div>
+
+
+      <div className="flex flex-col md:flex-row gap-4 justify-end">
+        <button
+          disabled={isSubmitting}
+          type="submit"
+          className="w-full bg-blue-500 flex justify-center items-center text-white py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none"
+        >
+          <Skeleton loading={isSubmitting} fallback={<Loader />}>
+            Editar
+          </Skeleton>
+        </button>
+        <button type="button" onClick={onCancel} className="ml-2 bg-red-500 text-white px-4 py-2 rounded-full">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  );
+};
 export default EditarConcurso;

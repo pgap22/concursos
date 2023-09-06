@@ -3,10 +3,12 @@ import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { crearConcurso } from "../api";
 import { useSession } from "../hooks/useSession";
+import Skeleton from "../components/Skeleton";
+import Loader from "../components/Loader";
 
 const CrearConcurso = () => {
   const { register, handleSubmit, formState: { errors } } = useForm();
-  const {usuario} = useSession();
+  const { usuario } = useSession();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState("");
@@ -16,7 +18,7 @@ const CrearConcurso = () => {
     setIsLoading(true);
     setServerError("");
     setSuccessMessage("");
-    
+
     try {
       await crearConcurso(data);
       setSuccessMessage("¡El concurso se creó exitosamente!");
@@ -47,50 +49,58 @@ const CrearConcurso = () => {
           {serverError && <div className="bg-red-200 text-red-800 p-3 rounded-lg mb-4">{serverError}</div>}
 
           {successMessage && <div className="bg-green-200 text-green-800 p-3 rounded-lg mb-4">{successMessage}</div>}
-          
+
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <label htmlFor="nombre" className="block text-gray-600 font-semibold mb-1">
-              Nombre
-            </label>
-            <input
-              {...register("nombre", { required: "El nombre es requerido" })}
-              type="text"
-              id="nombre"
-              placeholder="Nombre"
-              className={`w-full p-3 rounded-md border ${errors.nombre ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:border-blue-500`}
-            />
-            {errors.nombre && <p className="text-red-500">{errors.nombre.message}</p>}
+            <div>
+              <label htmlFor="nombre" className="block text-gray-600 font-semibold mb-1">
+                Nombre
+              </label>
+              <input
+                {...register("nombre", { required: "El nombre es requerido" })}
+                type="text"
+                id="nombre"
+                placeholder="Nombre"
+                className={`w-full p-3 rounded-md border ${errors.nombre ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:border-blue-500`}
+              />
+              {errors.nombre && <p className="text-red-500">{errors.nombre.message}</p>}
+            </div>
 
-            <label htmlFor="descripcion" className="block text-gray-600 font-semibold mb-1">
-              Descripción
-            </label>
-            <textarea
-              {...register("descripcion", { required: true })}
-              id="descripcion"
-              placeholder="Descripción"
-              className={`w-full p-3 rounded-md border ${errors.descripcion ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:border-blue-500`}
-            />
-            {errors.descripcion && <p className="text-red-500">La descripción es requerida</p>}
+            <div>
+              <label htmlFor="descripcion" className="block text-gray-600 font-semibold mb-1">
+                Descripción
+              </label>
+              <textarea
+                {...register("descripcion", { required: true })}
+                id="descripcion"
+                placeholder="Descripción"
+                className={`w-full p-3 rounded-md border ${errors.descripcion ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:border-blue-500`}
+              />
+              {errors.descripcion && <p className="text-red-500">La descripción es requerida</p>}
 
-            <label htmlFor="fecha" className="block text-gray-600 font-semibold mb-1">
-              Fecha
-            </label>
-            <input
-              {...register("fecha", { required: true })}
-              type="datetime-local"
-              id="fecha"
-              min={new Date("2023-09-07").toLocaleDateString("sv", { hour: 'numeric', minute: 'numeric' })}
-              max={new Date("2023-09-11").toLocaleDateString("sv", { hour: 'numeric', minute: 'numeric' })}
-              className={`w-full p-3 rounded-md border ${errors.fecha ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:border-blue-500`}
-            />
-            {errors.fecha && <p className="text-red-500">La fecha es requerida</p>}
-            
+            </div>
+            <div>
+              <label htmlFor="fecha" className="block text-gray-600 font-semibold mb-1">
+                Fecha
+              </label>
+              <input
+                {...register("fecha", { required: true, valueAsDate: true })}
+                type="datetime-local"
+                id="fecha"
+                min={new Date("2023-09-07").toLocaleDateString("sv", { hour: 'numeric', minute: 'numeric' })}
+                max={new Date("2023-09-11").toLocaleDateString("sv", { hour: 'numeric', minute: 'numeric' })}
+                className={`w-full p-3 rounded-md border ${errors.fecha ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:border-blue-500`}
+              />
+              {errors.fecha && <p className="text-red-500">La fecha es requerida</p>}
+
+            </div>
             <button
-              type="submit"
               disabled={isLoading}
-              className={`w-full bg-blue-500 text-white py-2 px-4 rounded-lg ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'} focus:outline-none`}
+              type="submit"
+              className="w-full bg-blue-500 flex justify-center items-center text-white py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none"
             >
-              {isLoading ? "Enviando..." : "Enviar"}
+              <Skeleton loading={isLoading} fallback={<Loader />}>
+                Crear
+              </Skeleton>
             </button>
           </form>
         </div>

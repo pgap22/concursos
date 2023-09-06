@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Link, useParams } from "react-router-dom"
+import { Link, useNavigate, useParams } from "react-router-dom"
 import { obtenerConcursoPorId, obtenerRanking } from "../api";
 import { FiArrowLeft } from 'react-icons/fi';
 
@@ -8,6 +8,8 @@ const Ranking = () => {
     const [concurso, setConcurso] = useState({})
     const [loading, setLoading] = useState(true);
     const { id } = useParams();
+
+    const navigate = useNavigate();
 
     const obtenerRankingConcurso = async () => {
         try {
@@ -25,7 +27,17 @@ const Ranking = () => {
         obtenerRankingConcurso();
     }, [])
 
+    useEffect(()=>{
+        if(concurso.id){
+            if(concurso.estado !== 'finalizado'){
+                navigate('/jurado')
+            }
+        }
+    },[concurso])
+
+
     if (loading) return <p>Cargando...</p>
+
 
     return (
         <>

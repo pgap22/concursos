@@ -4,6 +4,8 @@ import { enviarResultadosConcurso, obtenerConcursoPorId, obtenerResultadosConcur
 import { obtenerConcursantePorId } from '../api/concursantes';
 import { useForm } from 'react-hook-form';
 import { Button } from '../components/Button';
+import Skeleton from '../components/Skeleton';
+import Loader from '../components/Loader';
 
 const Evaluar = () => {
     const { id_concursante, id_concurso } = useParams();
@@ -16,7 +18,7 @@ const Evaluar = () => {
 
     const navigate = useNavigate();
 
-    const { register, handleSubmit } = useForm();
+    const { register, handleSubmit, formState: {isSubmitting} } = useForm();
 
     const enviarResultado = async (data) => {
         try {
@@ -69,6 +71,14 @@ const Evaluar = () => {
         })()
     }, [])
 
+    useEffect(()=>{
+        if(concurso.id){
+            if(concurso.estado !== 'evaluacion'){
+                navigate('/jurado')
+            }
+        }
+    },[concurso])
+
     if (loading) return <p>Cargando...</p>
 
 
@@ -110,7 +120,11 @@ const Evaluar = () => {
                                 </div>
                             ) : ''
                         ))}
-                        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full md:w-fit">Enviar</button>
+                        <button disabled={isSubmitting} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full md:w-fit">
+                            <Skeleton loading={isSubmitting} fallback={<Loader />}>
+                                Enviar
+                            </Skeleton>
+                        </button>
                     </form>
                 ) : (
                     <p className="text-lg font-bold">No hay rubrica</p>

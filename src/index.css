@@ -5,3 +5,7 @@
 #ponderacion-item:has(input:checked){
     @apply bg-blue-200 transition-all;
 }
+
+button:disabled{
+    @apply opacity-40;
+}

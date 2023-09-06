@@ -50,3 +50,12 @@ export const eliminarCriterio = async (id) => {
         throw error;
     }
 }
+
+export const duplicarCriterio = async (id) =>{
+    try {
+        const {data} = await clienteAxios.get(`/criterios/duplicar/${id}`, headers());
+        return data;
+    } catch (error) {
+        throw error
+    }
+}

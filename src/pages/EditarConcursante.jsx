@@ -3,16 +3,21 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { actualizarConcursante, eliminarConcursante, obtenerConcursantePorId, obtenerConcursosDisponibles, removerDeConcurso, unirloAConcurso } from '../api/concursantes';
 import { useSession } from '../hooks/useSession';
+import Skeleton from '../components/Skeleton';
+import Loader from '../components/Loader';
 
 const EditarConcursante = () => {
     const [concursos, setConcursos] = useState([]);
     const [concursante, setConcursante] = useState({});
+
+    const [loadingDelete, setLoadingDelete] = useState(false);
+
     const { id } = useParams();
     const { usuario } = useSession();
 
     const navigate = useNavigate();
-    const { register, handleSubmit } = useForm();
-    const { register: registerConcurso, handleSubmit: submitConcurso } = useForm();
+    const { register, handleSubmit, formState: {isSubmitting} } = useForm();
+    const { register: registerConcurso, handleSubmit: submitConcurso, formState:{isSubmitting: loadingConcurso} } = useForm();
 
 
     const editarConcursanteSubmit = async (data) => {
@@ -26,17 +31,21 @@ const EditarConcursante = () => {
 
     const eliminarConcursanteClick = async () => {
         try {
+            setLoadingDelete(true)
             await eliminarConcursante(id);
             navigate(`/${usuario.rol}`);
         } catch (error) {
             console.log(error);
+        }
+        finally{
+            setLoadingDelete(false)
         }
     };
 
     const obtenerConcursosPage = async () => {
         try {
             const data = await obtenerConcursosDisponibles(id);
-            setConcursos(data.filter(concurso => concurso.estado=="inscripcion"));
+            setConcursos(data.filter(concurso => concurso.estado == "inscripcion"));
         } catch (error) {
             console.log(error);
         }
@@ -64,12 +73,16 @@ const EditarConcursante = () => {
 
     const sacarDelConcursoClick = async (id_concurso) => {
         try {
+            setLoadingDelete(true);
             await removerDeConcurso(id, id_concurso);
             await obtenerConcursante();
             await obtenerConcursosPage();
 
         } catch (error) {
             console.log(error);
+        }
+        finally{
+            setLoadingDelete(false)
         }
     };
 
@@ -91,47 +104,70 @@ const EditarConcursante = () => {
                     </Link>
                     <form onSubmit={handleSubmit(editarConcursanteSubmit)} className="space-y-6">
                         <h2 className="text-xl font-semibold text-gray-800">Editar Datos</h2>
-                        <label htmlFor="nombres" className="block text-gray-600 font-semibold">
-                            Nombres
-                        </label>
-                        <input
-                            {...register('nombres', { required: true, value: concursante.nombres })}
-                            type="text"
-                            id="nombres"
-                            placeholder="Nombres"
-                            className="w-full p-3 rounded-md border focus:outline-none focus:border-blue-500"
-                        />
+                        <div>
+                            <label htmlFor="nombres" className="block text-gray-600 font-semibold">
+                                Nombres
+                            </label>
+                            <input
+                                {...register('nombres', { required: true, value: concursante.nombres })}
+                                type="text"
+                                id="nombres"
+                                placeholder="Nombres"
+                                className="w-full p-3 rounded-md border focus:outline-none focus:border-blue-500"
+                            />
 
-                        <label htmlFor="apellidos" className="block text-gray-600 font-semibold">
-                            Apellidos
-                        </label>
-                        <input
-                            {...register('apellidos', { required: true, value: concursante.apellidos })}
-                            type="text"
-                            id="apellidos"
-                            placeholder="Apellidos"
-                            className="w-full p-3 rounded-md border focus:outline-none focus:border-blue-500"
-                        />
+                        </div>
+                        <div>
+                            <label htmlFor="apellidos" className="block text-gray-600 font-semibold">
+                                Apellidos
+                            </label>
+                            <input
+                                {...register('apellidos', { required: true, value: concursante.apellidos })}
+                                type="text"
+                                id="apellidos"
+                                placeholder="Apellidos"
+                                className="w-full p-3 rounded-md border focus:outline-none focus:border-blue-500"
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="grado" className="block text-gray-600 font-semibold">
+                                Grado
+                            </label>
+                            <select className="w-full p-3 rounded-md border focus:outline-none focus:border-blue-500"
+                                {...register('grado', { required: 'El grado es requerido', value: concursante.grado })}
+                            >
+                                <option value="Segundo Ciclo">Segundo Ciclo</option>
+                                <option value="Tercer Ciclo">Tercer Ciclo</option>
+                                <option value="Bachillerato">Bachillerato</option>
+                            </select>
+                        </div>
 
-                        <label htmlFor="grado" className="block text-gray-600 font-semibold">
-                            Grado
-                        </label>
-                        <input
-                            {...register('grado', { required: true, value: concursante.grado })}
-                            type="text"
-                            id="grado"
-                            placeholder="Grado"
-                            className="w-full p-3 rounded-md border focus:outline-none focus:border-blue-500"
-                        />
+                        <div>
+
+                            <label htmlFor="institucion" className="block text-gray-600 font-semibold">
+                                Institucion Educativa
+                            </label>
+                            <input
+                                {...register('institucion', { required: 'Los institucion son requeridos', value: concursante.institucion })}
+                                type="text"
+                                id="institucion"
+                                placeholder="Ej. Colegio Don Bosco"
+                                className="w-full p-3 rounded-md border focus:outline-none focus:border-blue-500"
+                            />
+                        </div>
 
                         <div className='flex flex-col gap-4'>
                             <button
                                 type="submit"
+                                disabled={isSubmitting||loadingDelete}
                                 className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none"
                             >
-                                Editar
+                                <Skeleton loading={isSubmitting} fallback={<Loader />}>
+                                    Editar
+                                </Skeleton>
                             </button>
                             <button
+                                disabled={isSubmitting||loadingDelete}
                                 onClick={eliminarConcursanteClick}
                                 type='button'
                                 className="w-full bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 focus:outline-none"
@@ -152,10 +188,13 @@ const EditarConcursante = () => {
                                     ))}
                                 </select>
                                 <button
+                                    disabled={loadingDelete||loadingConcurso}
                                     type="submit"
                                     className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none"
                                 >
-                                    Unirlo a concurso
+                                    <Skeleton loading={loadingConcurso} fallback={<Loader />}>
+                                        Unirlo al concurso
+                                    </Skeleton>
                                 </button>
                             </>
                         ) : (
@@ -167,16 +206,17 @@ const EditarConcursante = () => {
                         {concursante.concursos.map(({ concurso }) => (
                             <div key={concurso.id} className="flex items-center justify-between">
                                 <p>{concurso.nombre}</p>
-                               {
-                                concurso.estado=="inscripcion"
-                                ?  <button
-                                onClick={() => sacarDelConcursoClick(concurso.id)}
-                                className="bg-red-500 text-white py-1 px-3 rounded-lg hover:bg-red-600 focus:outline-none"
-                            >
-                                Sacar del concurso
-                            </button>
-                            : ''
-                               }
+                                {
+                                    concurso.estado == "inscripcion"
+                                        ? <button
+                                            disabled={loadingDelete}
+                                            onClick={() => sacarDelConcursoClick(concurso.id)}
+                                            className="bg-red-500 text-white py-1 px-3 rounded-lg hover:bg-red-600 focus:outline-none"
+                                        >
+                                            Sacar del concurso
+                                        </button>
+                                        : ''
+                                }
                             </div>
                         ))}
                     </div>

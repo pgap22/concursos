@@ -3,11 +3,13 @@ import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import { crearConcursante } from '../api/concursantes';
 import { useSession } from '../hooks/useSession';
+import Skeleton from '../components/Skeleton';
+import Loader from '../components/Loader';
 
 const CrearConcursante = () => {
   const navigate = useNavigate();
-  const { register, handleSubmit } = useForm();
-  const {usuario} = useSession();
+  const { register, handleSubmit, formState: { isSubmitting } } = useForm();
+  const { usuario } = useSession();
 
   const crearConcursanteSubmit = async (data) => {
     try {
@@ -30,44 +32,68 @@ const CrearConcursante = () => {
           <h1 className="text-3xl font-semibold text-gray-800 mb-4">Crear Concursante</h1>
 
           <form onSubmit={handleSubmit(crearConcursanteSubmit)} className="space-y-6">
-            <label htmlFor="nombres" className="block text-gray-600 font-semibold">
-              Nombres
-            </label>
-            <input
-              {...register('nombres', { required: 'Los nombres son requeridos' })}
-              type="text"
-              id="nombres"
-              placeholder="Nombres"
-              className="w-full p-3 rounded-md border focus:outline-none focus:border-blue-500"
-            />
+            <div>
+              <label htmlFor="nombres" className="block text-gray-600 font-semibold">
+                Nombres
+              </label>
+              <input
+                {...register('nombres', { required: 'Los nombres son requeridos' })}
+                type="text"
+                id="nombres"
+                placeholder="Nombres"
+                className="w-full p-3 rounded-md border focus:outline-none focus:border-blue-500"
+              />
+            </div>
 
-            <label htmlFor="apellidos" className="block text-gray-600 font-semibold">
-              Apellidos
-            </label>
-            <input
-              {...register('apellidos', { required: 'Los apellidos son requeridos' })}
-              type="text"
-              id="apellidos"
-              placeholder="Apellidos"
-              className="w-full p-3 rounded-md border focus:outline-none focus:border-blue-500"
-            />
+            <div>
 
-            <label htmlFor="grado" className="block text-gray-600 font-semibold">
-              Grado
-            </label>
-            <input
-              {...register('grado', { required: 'El grado es requerido' })}
-              type="text"
-              id="grado"
-              placeholder="Grado"
-              className="w-full p-3 rounded-md border focus:outline-none focus:border-blue-500"
-            />
+              <label htmlFor="apellidos" className="block text-gray-600 font-semibold">
+                Apellidos
+              </label>
+              <input
+                {...register('apellidos', { required: 'Los apellidos son requeridos' })}
+                type="text"
+                id="apellidos"
+                placeholder="Apellidos"
+                className="w-full p-3 rounded-md border focus:outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="grado" className="block text-gray-600 font-semibold">
+                Grado
+              </label>
+              <select className="w-full p-3 rounded-md border focus:outline-none focus:border-blue-500"
+                {...register('grado', { required: 'El grado es requerido' })}
+              >
+                <option value="Segundo Ciclo">Segundo Ciclo</option>
+                <option value="Tercer Ciclo">Tercer Ciclo</option>
+                <option value="Bachillerato">Bachillerato</option>
+              </select>
+            </div>
+
+            <div>
+
+              <label htmlFor="institucion" className="block text-gray-600 font-semibold">
+                Institucion Educativa
+              </label>
+              <input
+                {...register('institucion', { required: 'Los institucion son requeridos' })}
+                type="text"
+                id="institucion"
+                placeholder="Ej. Colegio Don Bosco"
+                className="w-full p-3 rounded-md border focus:outline-none focus:border-blue-500"
+              />
+            </div>
 
             <button
+              disabled={isSubmitting}
               type="submit"
-              className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none"
+              className="w-full bg-blue-500 flex justify-center items-center text-white py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none"
             >
-              Crear
+              <Skeleton loading={isSubmitting} fallback={<Loader />}>
+                Crear
+              </Skeleton>
             </button>
           </form>
         </div>

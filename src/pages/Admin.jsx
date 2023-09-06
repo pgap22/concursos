@@ -122,6 +122,12 @@ const Section = ({ title, items, itemType }) => (
             }>{item.estado}</div>
             : ''
           }
+          {
+            item.usuarioCreador && 
+            <div className='mt-2'>
+              <p className='text-sm'>Creador Por: {item.usuarioCreador.nombre}</p>
+            </div>
+          }
         </ItemLink>
       ))}
     </div>

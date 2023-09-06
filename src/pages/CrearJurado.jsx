@@ -3,6 +3,8 @@ import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import { crearJurado } from '../api';
 import { RiEyeCloseLine, RiEyeLine } from 'react-icons/ri';
+import Loader from '../components/Loader';
+import Skeleton from '../components/Skeleton';
 
 const CrearJurado = () => {
   const navigate = useNavigate();
@@ -13,7 +15,7 @@ const CrearJurado = () => {
     setShowPassword(!showPassword);
   };
 
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit, formState: {isSubmitting} } = useForm();
 
   const crearJuradoSubmit = async (data) => {
     try {
@@ -39,68 +41,79 @@ const CrearJurado = () => {
           <h1 className="text-3xl font-semibold text-gray-800 mb-4">Crear Jurado/Encargado</h1>
 
           <form onSubmit={handleSubmit(crearJuradoSubmit)} className="space-y-4">
-            <label htmlFor="nombre" className="block text-gray-600 font-semibold">
-              Nombre
-            </label>
-            <input
-              {...register('nombre', { required: 'El nombre es requerido' })}
-              type="text"
-              id="nombre"
-              placeholder="Nombre"
-              className="w-full p-3 rounded-md border focus:outline-none focus:border-blue-500"
-            />
+            <div>
+              <label htmlFor="nombre" className="block text-gray-600 font-semibold">
+                Nombre
+              </label>
+              <input
+                {...register('nombre', { required: 'El nombre es requerido' })}
+                type="text"
+                id="nombre"
+                placeholder="Nombre"
+                className="w-full p-3 rounded-md border focus:outline-none focus:border-blue-500"
+              />
+            </div>
 
-            <label htmlFor="usuario" className="block text-gray-600 font-semibold">
-              Usuario
-            </label>
-            <input
-              {...register('usuario', { required: 'El usuario es requerido' })}
-              type="text"
-              id="usuario"
-              placeholder="Usuario"
-              className="w-full p-3 rounded-md border focus:outline-none focus:border-blue-500"
-            />
+            <div>
+              <label htmlFor="usuario" className="block text-gray-600 font-semibold">
+                Usuario
+              </label>
+              <input
+                {...register('usuario', { required: 'El usuario es requerido' })}
+                type="text"
+                id="usuario"
+                placeholder="Usuario"
+                className="w-full p-3 rounded-md border focus:outline-none focus:border-blue-500"
+              />
+            </div>
 
-            <label htmlFor="password" className="block text-sm font-medium">
-              Contraseña
-            </label>
-            <div className="relative">
-              <div className="relative flex ">
-                <input
-                  {...register("password", { required: true })}
-                  type={showPassword ? 'text' : 'password'}
-                  className="w-full p-3 rounded-md border focus:outline-none focus:border-blue-500"
-                  placeholder="Contraseña"
-                />
-                <button
-                  type="button"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400"
-                  onClick={handleTogglePassword}
-                >
-                  {showPassword ? <RiEyeCloseLine size={28} /> : <RiEyeLine size={28} />}
-                </button>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium">
+                Contraseña
+              </label>
+              <div className="relative">
+                <div className="relative flex ">
+                  <input
+                    {...register("password", { required: true })}
+                    type={showPassword ? 'text' : 'password'}
+                    className="w-full p-3 rounded-md border focus:outline-none focus:border-blue-500"
+                    placeholder="Contraseña"
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400"
+                    onClick={handleTogglePassword}
+                  >
+                    {showPassword ? <RiEyeCloseLine size={28} /> : <RiEyeLine size={28} />}
+                  </button>
+                </div>
               </div>
             </div>
 
+            <div>
 
-            <label htmlFor="Rol" className="block text-gray-600 font-semibold">
-              Rol
-            </label>
+              <label htmlFor="Rol" className="block text-gray-600 font-semibold">
+                Rol
+              </label>
 
-            <select {...register('rol', { required: true })} className="w-full p-3 rounded-md border focus:outline-none focus:border-blue-500">
-              <option value="jurado">
-                Jurado
-              </option>
-              <option value="encargado">
-                Encargado
-              </option>
-            </select>
+              <select {...register('rol', { required: true })} className="w-full p-3 rounded-md border focus:outline-none focus:border-blue-500">
+                <option value="jurado">
+                  Jurado
+                </option>
+                <option value="encargado">
+                  Encargado
+                </option>
+              </select>
+            </div>
 
             <button
+              disabled={isSubmitting}
               type="submit"
-              className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none"
+              className="w-full bg-blue-500 flex justify-center items-center text-white py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none"
             >
-              Crear
+              <Skeleton loading={isSubmitting} fallback={<Loader />}>
+                Crear
+              </Skeleton>
             </button>
           </form>
         </div>

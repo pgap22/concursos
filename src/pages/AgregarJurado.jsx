@@ -3,6 +3,8 @@ import { Link, useLocation, useParams } from 'react-router-dom'
 import { agregarJuradoConcurso, eliminarJuradoConcurso, obtenerConcursoPorId, obtenerJurados, obtenerJuradosConcurso, obtenerJuradosConcursoDisponible } from '../api';
 import { useForm } from 'react-hook-form';
 import { useSession } from '../hooks/useSession';
+import Skeleton from '../components/Skeleton';
+import Loader from '../components/Loader';
 
 const AgregarJurado = () => {
   const { concurso: dataConcurso } = useLocation().state;
@@ -11,16 +13,21 @@ const AgregarJurado = () => {
   const [juradosConcurso, setJuradosConcuros] = useState([])
   const [jurados, setJurados] = useState([])
   const [loading, setLoading] = useState(true)
-  const {usuario} = useSession();
+  const { usuario } = useSession();
 
-  const { register, handleSubmit, reset } = useForm()
+  const { register, handleSubmit, reset, formState: {isSubmitting} } = useForm()
+  const [loadingDelete, setLoadingDelete] = useState(false);
 
   const eliminarJurado = async (id_jurado) => {
     try {
+      setLoadingDelete(true)
       await eliminarJuradoConcurso(id, id_jurado);
       await obtenerJuradosPage();
     } catch (error) {
       console.log(error)
+    }
+    finally {
+      setLoadingDelete(false)
     }
   }
 
@@ -101,15 +108,23 @@ const AgregarJurado = () => {
                 </select>
                 : <p className='my-2'>No hay jurados disponibles</p>
             }
-            <button className='p-2 w-full text-white bg-blue-500 rounded-md mt-4 hover:bg-blue-700 transition-all'>Agregar Jurado</button>
-          </form>
+            <button
+              disabled={isSubmitting}
+              type="submit"
+              className="w-full mt-4 bg-blue-500 flex justify-center items-center text-white py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none"
+            >
+              <Skeleton loading={isSubmitting} fallback={<Loader />}>
+                Agregar a concurso
+              </Skeleton>
+            </button>          </form>
 
           <h2 className="text-2xl font-bold my-4">Jurados</h2>
           <div className="space-y-6">
             {juradosConcurso.map((jurado) => (
-              <div key={jurado.id} className="flex border items-center justify-between bg-white rounded-md p-4 shadow-lg">
+              <div key={jurado.id} className={"flex border items-center justify-between bg-white rounded-md p-4 shadow-lg " + (loadingDelete ? 'opacity-40 select-none' : '')}>
                 <p className="text-lg font-medium">{jurado.nombre}</p>
                 <button
+                  disabled={loadingDelete}
                   onClick={() => eliminarJurado(jurado.id)}
                   className="px-3 py-1 text-white bg-red-500 rounded-md hover:bg-red-700 transition-colors"
                 >

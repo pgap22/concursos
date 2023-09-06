@@ -4,6 +4,8 @@ import { useForm } from 'react-hook-form';
 import { obtenerConcursantes, removerDeConcurso, unirloAConcurso } from '../api/concursantes';
 import { obtenerConcursantesConcursoDisponible, obtenerConcursoConcursantes, obtenerConcursoPorId } from '../api';
 import { useSession } from '../hooks/useSession';
+import Skeleton from '../components/Skeleton';
+import Loader from '../components/Loader';
 
 const AgregarConcursante = () => {
   const { concurso: dataConcurso } = useLocation().state;
@@ -12,16 +14,23 @@ const AgregarConcursante = () => {
   const [concursantesConcurso, setConcursantesConcurso] = useState([])
   const [concursantes, setConcursantes] = useState([])
   const [loading, setLoading] = useState(true)
-  const {usuario} = useSession();
 
-  const { register, handleSubmit, reset } = useForm()
+  const [loadingAdd, setLoadingAdd] = useState(false);
+
+  const { usuario } = useSession();
+
+  const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm()
 
   const eliminarConcursanteClick = async (id_concursante) => {
     try {
+      setLoadingAdd(true);
       await removerDeConcurso(id_concursante, id);
       await obtenerConcursantesPage();
     } catch (error) {
       console.log(error)
+    }
+    finally{
+      setLoadingAdd(false);
     }
   }
 
@@ -54,7 +63,7 @@ const AgregarConcursante = () => {
         obtenerConcursantesConcursoDisponible(id)
       ])
 
-      setConcursantesConcurso(concursantesConcursosData.map(({concursante})=> concursante));
+      setConcursantesConcurso(concursantesConcursosData.map(({ concursante }) => concursante));
       setConcursantes(concursatensData)
       reset()
     } catch (error) {
@@ -95,21 +104,30 @@ const AgregarConcursante = () => {
                 ? <select {...register('id_concursante', { required: true })} className="cursor-pointer w-full p-3 mt-2 rounded-md border focus:outline-none focus:border-blue-500">
                   {concursantes.map((concursante) => (
                     <option key={concursante.id} value={concursante.id}>
-                     {concursante.nombres} {concursante.apellidos}
+                      {concursante.nombres} {concursante.apellidos}
                     </option>
                   ))}
                 </select>
                 : <p className='my-2'>No hay concursantes disponibles</p>
             }
-            <button className='p-2 w-full text-white bg-blue-500 rounded-md mt-4 hover:bg-blue-700 transition-all'>Agregar Concursante</button>
+            <button
+              disabled={isSubmitting}
+              type="submit"
+              className="w-full mt-4 bg-blue-500 flex justify-center items-center text-white py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none"
+            >
+              <Skeleton loading={isSubmitting} fallback={<Loader />}>
+                Agregar a concurso
+              </Skeleton>
+            </button>
           </form>
 
           <h2 className="text-2xl font-bold my-4">Concursantes</h2>
           <div className="space-y-6">
             {concursantesConcurso.map((concursante) => (
-              <div key={concursante.id} className="flex border items-center justify-between bg-white rounded-md p-4 shadow">
+              <div key={concursante.id} className={"flex border items-center justify-between bg-white rounded-md p-4 shadow "+(loadingAdd ? 'opacity-40 select-none' : '')}>
                 <p className="text-lg font-medium">{concursante.nombres} {concursante.apellidos}</p>
                 <button
+                  disabled={loadingAdd}
                   onClick={() => eliminarConcursanteClick(concursante.id)}
                   className="px-3 py-1 text-white bg-red-500 rounded-md hover:bg-red-700 transition-colors"
                 >
