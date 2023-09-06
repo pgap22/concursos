@@ -3,18 +3,23 @@ import { obtenerConcursos } from '../api';
 import { useSession } from '../hooks/useSession';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/Button';
-import { data } from 'autoprefixer';
 
 const Jurado = () => {
   const [concursos, setConcursos] = useState([]);
+  const [loading, setLoading] = useState(false);
   const { logout, usuario } = useSession();
+
 
   const fetchConcursos = async () => {
     try {
+      setLoading(true)
       const data = await obtenerConcursos();
       setConcursos(data);
     } catch (error) {
       console.log(error);
+    }
+    finally{
+      setLoading(false)
     }
   };
 
@@ -31,7 +36,7 @@ const Jurado = () => {
             <Button text="Cerrar Sesión" onClick={logout} />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {concursos.map((concurso) => (
+            {loading ? 'Cargando Concuros...' : concursos.map((concurso) => (
               <Concurso key={concurso.id} concurso={concurso} />
             ))}
           </div>

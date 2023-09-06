@@ -2,21 +2,23 @@ import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { obtenerConcursoConcursantes } from '../api';
 import { Button } from '../components/Button'; // Imagina que tienes un componente reutilizable para el botón estilo Apple
-import { useSession } from '../hooks/useSession';
+// import { useSession } from '../hooks/useSession';
 
 const JuradoConcursantes = () => {
   const { id } = useParams();
 
   const [concursantes, setConcursantes] = useState([]);
-
-  const {usuario} = useSession();
+  const [loading, setLoading] = useState(false);
 
   const obtenerConcursantes = async () => {
     try {
+      setLoading(true);
       const data = await obtenerConcursoConcursantes(id);
       setConcursantes(data);
     } catch (error) {
       console.log(error);
+    }finally{
+      setLoading(false)
     }
   };
 
@@ -35,7 +37,7 @@ const JuradoConcursantes = () => {
             </Link>
           </div>
           <div className="mt-6 flex flex-col gap-4">
-            {concursantes.filter(({concursante})=> !concursante.evaluaciones.length).map(({ concursante }) => (
+            {loading ? 'Cargando Concursantes...' : concursantes.filter(({concursante})=> !concursante.evaluaciones.length).map(({ concursante }) => (
               <Link key={concursante.id} to={`/jurado/evaluar/${concursante.id}/${id}`}>
                 <button className="bg-blue-500 text-white py-3 px-6 rounded-md font-bold w-full hover:bg-blue-600 transition duration-300 ease-in-out border border-blue-600 focus:outline-none focus:border-blue-800">
                   {concursante.nombres} {concursante.apellidos}

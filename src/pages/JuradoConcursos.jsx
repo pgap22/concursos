@@ -7,11 +7,13 @@ const JuradoConcursos = () => {
 
   const stateLocation = useLocation().state;
   const [concurso, setConcurso] = useState({});
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     (async () => {
       try {
+        setLoading(true);
         if (!stateLocation) {
           const concursoData = await obtenerConcursoPorId(id);
           setConcurso(concursoData);
@@ -20,6 +22,9 @@ const JuradoConcursos = () => {
         setConcurso(stateLocation.concurso);
       } catch (error) {
         navigate("/jurado")
+      }
+      finally{
+        setLoading(false)
       }
     })();
   }, [])
@@ -34,6 +39,9 @@ const JuradoConcursos = () => {
             </button>
           </Link>
           <div className="grid grid-cols-1 gap-4 md:gap-6 md:flex">
+            {
+              loading ? 'Cargando...' : ''
+            }
             {
               concurso.estado == "finalizado"
                 ? <Link to={'/jurado/ranking/' + id}>

@@ -83,9 +83,9 @@ const Admin = () => {
               </div>
             )}
             <Section title="Concurso" items={concursos} itemType="concurso" />
-            {/* <Section title="Concursante" items={concursantes} itemType="concursante" /> */}
             <Section title="Jurado" items={jurados.filter(jurado => jurado.rol == "jurado")} itemType="jurado" />
             <Section title="Encargado" items={jurados.filter(jurado => jurado.rol == "encargado")} itemType="encargado" />
+            <Section title="Concursante" items={concursantes} itemType="concursante" />
           </>
         )}
       </main>

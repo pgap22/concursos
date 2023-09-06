@@ -155,6 +155,7 @@ const EditarConcurso = () => {
             defaultValue={new Date(concurso.fecha).toLocaleDateString("sv", { hour: 'numeric', minute: 'numeric' })}
             register={register("fecha", { required: true, valueAsDate: true })}
           />
+          <div className="flex flex-col gap-2">
           <button
             disabled={isSubmitting}
             type="submit"
@@ -164,6 +165,16 @@ const EditarConcurso = () => {
               Editar
             </Skeleton>
           </button>
+          <button
+            disabled={loadingClick}
+            onClick={eliminarConcursoClick}
+            className="bg-red-500 text-white py-2 px-4 rounded-lg"
+          >
+            <Skeleton loading={loadingClick}>
+              Eliminar Concurso
+            </Skeleton>
+          </button>
+          </div>
         </form>
         <div className="flex-col md:flex-row flex gap-4">
           {
@@ -206,15 +217,7 @@ const EditarConcurso = () => {
               </button>
               : ''
           }
-          <button
-            disabled={loadingClick}
-            onClick={eliminarConcursoClick}
-            className="bg-red-500 text-white py-2 px-4 rounded-lg"
-          >
-            <Skeleton loading={loadingClick}>
-              Eliminar Concurso
-            </Skeleton>
-          </button>
+     
         </div>
         <h2 className="text-xl font-semibold text-gray-800">Criterios</h2>
         <div className="flex flex-col md:flex-row gap-4">
