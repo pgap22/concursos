@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { actualizarConcurso, cambiarEstado, eliminarConcurso, importarRubricaJSON, obtenerConcursoPorId } from "../api";
+import { actualizarConcurso, cambiarEstado, eliminarConcurso, importarRubricaJSON, obtenerConcursoPorId, resetearEvaluaciones } from "../api";
 import { useForm } from "react-hook-form";
 import { actualizarCriterio, crearCriterio, duplicarCriterio, eliminarCriterio } from "../api/criterios";
 import { actualizarPonderacion, crearPonderacion, eliminarPonderacion } from "../api/ponderacion";
@@ -8,6 +8,7 @@ import { useClickAway } from "@uidotdev/usehooks";
 import { useSession } from "../hooks/useSession";
 import Skeleton from "../components/Skeleton";
 import Loader from "../components/Loader";
+import { copyToClipboard } from "../helpers";
 
 const EditarConcurso = () => {
   const [concurso, setConcurso] = useState({});
@@ -17,7 +18,7 @@ const EditarConcurso = () => {
   const [loadingClick, setLoadingClick] = useState(false);
   const [loadingImport, setLoadingImport] = useState(false);
 
-
+  const inputExport = useRef();
   const { usuario } = useSession();
 
   const navigate = useNavigate();
@@ -41,6 +42,7 @@ const EditarConcurso = () => {
 
       await cambiarEstado(id, estado);
       await obtenerConcurso();
+      navigate("/" + usuario.rol)
     } catch (error) {
       console.log(error)
     }
@@ -66,6 +68,20 @@ const EditarConcurso = () => {
       console.log(error);
     }
   };
+
+  const resetearEvaluacionesClick = async () => {
+    try {
+      setLoadingClick(true);
+      await resetearEvaluaciones(id)
+      await obtenerConcurso();
+      alert("Se han reseteados las evaluaciones")
+    } catch (error) {
+      console.log(error)
+    }
+    finally {
+      setLoadingClick(false)
+    }
+  }
 
   const eliminarConcursoClick = async () => {
     try {
@@ -93,7 +109,7 @@ const EditarConcurso = () => {
       console.log(error)
       alert("Error en el formato del json !")
     }
-    finally{
+    finally {
       setLoadingImport(false);
     }
   }
@@ -118,7 +134,7 @@ const EditarConcurso = () => {
         return criterio;
       }
     )
-    await navigator.clipboard.writeText(JSON.stringify(datos));
+    await copyToClipboard(JSON.stringify(datos));
     await obtenerConcurso();
 
     alert("Criterios Copiados al portapapel")
@@ -131,6 +147,7 @@ const EditarConcurso = () => {
 
   return (
     <main className="px-4 py-8 bg-gray-100 min-h-screen">
+      <input ref={inputExport} hidden type="text" />
       <div className="max-w-screen-md mx-auto bg-white rounded-lg overflow-hidden shadow-md p-6 md:p-8 space-y-6">
         <Link to={`/${usuario.rol}`}>
           <button className="mb-4 bg-blue-500 text-white py-2 px-4 rounded-lg">
@@ -156,24 +173,30 @@ const EditarConcurso = () => {
             register={register("fecha", { required: true, valueAsDate: true })}
           />
           <div className="flex flex-col gap-2">
-          <button
-            disabled={isSubmitting}
-            type="submit"
-            className="w-full bg-blue-500 flex justify-center items-center text-white py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none"
-          >
-            <Skeleton loading={isSubmitting} fallback={<Loader />}>
-              Editar
-            </Skeleton>
-          </button>
-          <button
-            disabled={loadingClick}
-            onClick={eliminarConcursoClick}
-            className="bg-red-500 text-white py-2 px-4 rounded-lg"
-          >
-            <Skeleton loading={loadingClick}>
-              Eliminar Concurso
-            </Skeleton>
-          </button>
+            <Link
+              to={`/${usuario.rol}/ranking/${concurso.id}`}
+              className="w-full bg-green-500 flex justify-center items-center text-white py-2 px-4 rounded-lg hover:bg-green-600 focus:outline-none"
+            >
+              Ver Ranking
+            </Link>
+            <button
+              disabled={isSubmitting}
+              type="submit"
+              className="w-full bg-blue-500 flex justify-center items-center text-white py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none"
+            >
+              <Skeleton loading={isSubmitting} fallback={<Loader />}>
+                Editar
+              </Skeleton>
+            </button>
+            <button
+              disabled={loadingClick}
+              onClick={eliminarConcursoClick}
+              className="bg-red-500 text-white py-2 px-4 rounded-lg"
+            >
+              <Skeleton loading={loadingClick}>
+                Eliminar Concurso
+              </Skeleton>
+            </button>
           </div>
         </form>
         <div className="flex-col md:flex-row flex gap-4">
@@ -217,8 +240,25 @@ const EditarConcurso = () => {
               </button>
               : ''
           }
-     
+
         </div>
+        {
+          concurso.estado == 'finalizado'
+            ?
+            <div className="flex flex-col gap-2">
+              <button
+                disabled={loadingClick}
+                onClick={resetearEvaluacionesClick}
+                className="bg-sky-500 text-white py-2 px-4 rounded-lg"
+              >
+                <Skeleton loading={loadingClick}>
+                  Resetear Evaluaciones
+                </Skeleton>
+              </button>
+              <p className="text-red-500 text-sm font-bold">BORRAR LAS EVALUACIONES SOLO EN CASO DE HACER OTRA RONDA</p>
+            </div>
+            : ''
+        }
         <h2 className="text-xl font-semibold text-gray-800">Criterios</h2>
         <div className="flex flex-col md:flex-row gap-4">
 
@@ -341,7 +381,7 @@ const Criterio = ({ criterio, obtenerConcurso }) => {
     }
   }
 
-  const duplicar = async()=>{
+  const duplicar = async () => {
     try {
       setLoading(true)
       await duplicarCriterio(criterio.id)
@@ -349,7 +389,7 @@ const Criterio = ({ criterio, obtenerConcurso }) => {
     } catch (error) {
       console.log(error)
     }
-    finally{
+    finally {
       setLoading(false)
     }
   }
@@ -529,7 +569,7 @@ const Ponderacion = ({ ponderacion, obtenerConcurso }) => {
     } catch (error) {
       console.log(error);
     }
-    finally{
+    finally {
       setLoading(false)
     }
   };

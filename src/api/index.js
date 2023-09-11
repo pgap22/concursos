@@ -208,3 +208,12 @@ export const importarRubricaJSON = async(id,json)=>{
         throw error
     }
 }
+
+export const resetearEvaluaciones = async (id)=>{
+    try {
+        const {data} =  await clienteAxios.delete("/concursos/resetear/"+id, headers())
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}

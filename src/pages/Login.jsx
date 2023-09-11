@@ -6,10 +6,11 @@ import { RiEyeCloseLine, RiEyeLine } from 'react-icons/ri';
 import { useState } from "react";
 import Alert from "../components/Alert";
 import { AxiosError } from "axios";
-
+import Skeleton from "../components/Skeleton"
+import Loader from "../components/Loader"
 function Login() {
   const [showPassword, setShowPassword] = useState(false);
-
+  const [loading, setLoading] = useState(false)
   const handleTogglePassword = () => {
     setShowPassword(!showPassword);
   };
@@ -22,6 +23,7 @@ function Login() {
   
   const loginSubmit = async (data) => {
     try {
+      setLoading(true)
       const usuario = await login(data);
       loginUsuario(usuario);
       navigate("/admin");
@@ -34,6 +36,9 @@ function Login() {
       }
 
       setError("Error del servidor")
+    }
+    finally{
+      setLoading(false)
     }
   }
 
@@ -78,9 +83,12 @@ function Login() {
           </div>
           <button
             type="submit"
+            disabled={loading}
             className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
-            Iniciar sesión
+            <Skeleton loading={loading} fallback={<Loader />}>
+              Iniciar Sesion
+            </Skeleton>
           </button>
         </form>
       </div>

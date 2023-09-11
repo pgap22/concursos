@@ -74,6 +74,10 @@ const router = createBrowserRouter([
         element: <Admin />
       },
       {
+        path: "ranking/:id",
+        element: <Ranking />
+      },
+      {
         path: "crear-concurso",
         element: <CrearConcurso />
       },

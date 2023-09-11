@@ -24,7 +24,7 @@ const CrearConcursante = () => {
     <main className="px-4 py-8 bg-gray-100 min-h-screen">
       <div className="max-w-screen-lg mx-auto bg-white rounded-lg overflow-hidden shadow-md">
         <div className="p-6 md:p-8">
-          <Link to="/admin" className="block mb-4">
+          <Link to={`/${usuario.rol}`} className="block mb-4">
             <button className="bg-blue-500 text-white py-2 px-4 rounded-lg">
               Regresar
             </button>
